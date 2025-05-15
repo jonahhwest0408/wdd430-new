@@ -1,0 +1,11 @@
+<a href="#" class="list-group-item clearfix" (click)="onClick()">
+    <div class="pull-left">
+      <!-- Using optional chaining to prevent errors if contact is null -->
+      <h4 class="list-group-item-heading">{{ contact?.name }}</h4>
+    </div>
+    <span class="pull-right">
+      <!-- Using optional chaining to prevent errors if contact is null -->
+      <img *ngIf="contact" [src]="contact?.imageUrl" alt="{{ contact?.name }}" />
+    </span>
+  </a>
+  
