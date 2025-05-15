@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Document } from './documents.model';
 
 @Component({
   selector: 'app-documents',
@@ -6,5 +7,9 @@ import { Component } from '@angular/core';
   templateUrl: './documents.component.html',
 })
 export class DocumentsComponent {
+  selectedDocument?: Document;
 
+  onSelectedDocument(document: Document) {
+    this.selectedDocument = document;
+  }
 }
