@@ -7,7 +7,7 @@ import { Document } from './documents.model';
   templateUrl: './documents.component.html',
 })
 export class DocumentsComponent {
-  selectedDocument?: Document;
+  selectedDocument!: Document;
 
   onSelectedDocument(document: Document) {
     this.selectedDocument = document;
