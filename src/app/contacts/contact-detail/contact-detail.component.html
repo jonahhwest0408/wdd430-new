@@ -12,8 +12,8 @@
           </div>
           <div class="col-sm-10">
             <!-- Display Edit and Delete buttons -->
-            <button class="btn btn-primary" style="margin-right: 10px;">Edit</button>
-            <button class="btn btn-danger">Delete</button>
+            <a [routerLink]="['/contacts', contact?.id, 'edit']" class="btn btn-primary">Edit</a>
+            <button class="btn btn-danger" (click)="onDelete()">Delete</button>
           </div>
         </div>
         <hr />

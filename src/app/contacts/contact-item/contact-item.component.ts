@@ -10,10 +10,4 @@ import { Contact } from '../contacts.model';
 export class ContactItemComponent {
   @Input() contact: Contact | null = null; 
   @Output() selected = new EventEmitter<Contact>();  
-
-  onClick() {
-    if (this.contact) { 
-      this.selected.emit(this.contact);  
-    }
-  }
 }

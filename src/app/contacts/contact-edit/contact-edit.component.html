@@ -1,0 +1,19 @@
+<div class="contact-edit">
+    <h2>{{ isNewContact ? 'New Contact' : 'Edit Contact' }}</h2>
+    <form (ngSubmit)="onSave()">
+      <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" [(ngModel)]="contact.name" name="name" required />
+      </div>
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" [(ngModel)]="contact.email" name="email" required />
+      </div>
+      <div>
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" [(ngModel)]="contact.phone" name="phone" required />
+      </div>
+      <button type="submit">{{ isNewContact ? 'Add Contact' : 'Save Changes' }}</button>
+    </form>
+  </div>
+  
