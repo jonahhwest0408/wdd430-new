@@ -4,12 +4,16 @@
     </div>
   </div>
   <hr>
-  <div class="row">
-    <div class="col-xs-12">
-      <app-contact-item
-      *ngFor="let contact of contacts"
-      [contact]="contact">
-    </app-contact-item>
-    </div>
+  <div
+    class="row"
+    cdkDropList
+    id="contactList"
+    [cdkDropListData]="contacts"
+    [cdkDropListConnectedTo]="['groupList']"
+    (cdkDropListDropped)="onDrop($event)"
+  >
+  <div *ngFor="let contact of contacts" cdkDrag>
+    <app-contact-item [contact]="contact"></app-contact-item>
   </div>
+</div>
   
