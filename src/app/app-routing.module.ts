@@ -9,6 +9,10 @@ import { ContactsComponent } from './contacts/contacts.component';
 import { ContactDetailComponent } from './contacts/contact-detail/contact-detail.component';
 import { ContactEditComponent } from './contacts/contact-edit/contact-edit.component';
 
+import { MessageComponent } from './messages/message.component';
+import { MessageEditComponent } from './messages/message-edit/message-edit.component';
+import { MessageListComponent } from './messages/message-list/message-list.component'; 
+
 const routes: Routes = [
   {
     path: 'documents',
@@ -27,6 +31,15 @@ const routes: Routes = [
       { path: ':id', component: ContactDetailComponent },
       { path: ':id/edit', component: ContactEditComponent }
     ]
+  },
+  {
+    path: 'messages',
+    component: MessageComponent,
+    children: [
+      { path: '', component: MessageListComponent },  
+      { path: 'new', component: MessageEditComponent },
+      { path: ':id/edit', component: MessageEditComponent }
+    ],
   },
 ];
 

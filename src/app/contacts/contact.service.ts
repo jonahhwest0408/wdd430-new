@@ -1,8 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { Contact } from './contacts.model';
-import { MOCKCONTACTS } from './MOCKCONTACTS';
 import { Subject } from 'rxjs';
-
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -12,49 +11,73 @@ export class ContactService {
   contactChangedEvent = new EventEmitter<Contact[]>();
   contactListChangedEvent = new Subject<Contact[]>();
 
-
   contacts: Contact[] = [];
+  private maxContactId: number = 0;
 
-  constructor() {
-    this.contacts = MOCKCONTACTS;
+  private firebaseUrl = 'https://wdd430-9af8f-default-rtdb.firebaseio.com/contacts.json';
+
+  constructor(private http: HttpClient) {
+    this.getContacts();
   }
 
-  getContacts(): Contact[] {
-    return this.contacts.slice(); 
+  getContacts(): void {
+    this.http.get<Contact[]>(this.firebaseUrl).subscribe(
+      (contacts: Contact[]) => {
+        this.contacts = contacts || [];
+        this.maxContactId = this.getMaxId();
+        this.contacts.sort((a, b) => a.name.localeCompare(b.name));
+        this.contactListChangedEvent.next(this.contacts.slice());
+      },
+      (error: any) => {
+        console.error('Error fetching contacts:', error);
+      }
+    );
   }
 
   getContact(id: string): Contact | null {
-    for (let contact of this.contacts) {
-      if (contact.id === id) {
-        return contact;
-      }
-    }
-    return null;
+    return this.contacts.find(contact => contact.id === id) ?? null;
   }
-  
+
   addContact(newContact: Contact): void {
-    newContact.id = this.generateId();
+    if (!newContact) return;
+    this.maxContactId++;
+    newContact.id = this.maxContactId.toString();
     this.contacts.push(newContact);
-    this.contactListChangedEvent.next(this.contacts.slice());
+    this.storeContacts();
   }
-  
+
   updateContact(updatedContact: Contact): void {
     const index = this.contacts.findIndex(c => c.id === updatedContact.id);
     if (index !== -1) {
       this.contacts[index] = updatedContact;
-      this.contactListChangedEvent.next(this.contacts.slice());
+      this.storeContacts();
     }
   }
-  
+
   deleteContact(contact: Contact): void {
     const index = this.contacts.indexOf(contact);
     if (index >= 0) {
       this.contacts.splice(index, 1);
-      this.contactListChangedEvent.next(this.contacts.slice());
+      this.storeContacts();
     }
   }
 
-  private generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
+  private storeContacts(): void {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    this.contacts.sort((a, b) => a.name.localeCompare(b.name));
+    this.http.put(this.firebaseUrl, this.contacts, { headers }).subscribe(() => {
+      this.contactListChangedEvent.next(this.contacts.slice());
+    });
+  }
+
+  private getMaxId(): number {
+    let maxId = 0;
+    for (let contact of this.contacts) {
+      const currentId = parseInt(contact.id ?? '0');
+      if (!isNaN(currentId) && currentId > maxId) {
+        maxId = currentId;
+      }
+    }
+    return maxId;
   }
 }

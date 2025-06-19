@@ -14,17 +14,22 @@ import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/dr
 export class ContactListComponent implements OnInit, OnDestroy {
   contacts: Contact[] = [];
   subscription!: Subscription;
+  term: string = '';
+
+  search(value: string) {
+    this.term = value;
+  }
 
   constructor(private contactService: ContactService) {}
 
   ngOnInit(): void {
-    this.contacts = this.contactService.getContacts();
-  
-    this.subscription = this.contactService.contactListChangedEvent.subscribe(
-      (contacts: Contact[]) => {
-        this.contacts = contacts;
-      }
-    );
+    this.contactService.getContacts(); 
+
+this.subscription = this.contactService.contactListChangedEvent.subscribe(
+  (contacts: Contact[]) => {
+    this.contacts = contacts;
+  }
+);
   }
 
   ngOnDestroy(): void {
