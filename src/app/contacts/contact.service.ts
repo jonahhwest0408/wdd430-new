@@ -12,19 +12,17 @@ export class ContactService {
   contactListChangedEvent = new Subject<Contact[]>();
 
   contacts: Contact[] = [];
-  private maxContactId: number = 0;
 
-  private firebaseUrl = 'https://wdd430-9af8f-default-rtdb.firebaseio.com/contacts.json';
+  private backendUrl = 'http://localhost:3000/contacts';
 
   constructor(private http: HttpClient) {
     this.getContacts();
   }
 
   getContacts(): void {
-    this.http.get<Contact[]>(this.firebaseUrl).subscribe(
-      (contacts: Contact[]) => {
-        this.contacts = contacts || [];
-        this.maxContactId = this.getMaxId();
+    this.http.get<{ message: string, contacts: Contact[] }>(this.backendUrl).subscribe(
+      (response) => {
+        this.contacts = response.contacts || [];
         this.contacts.sort((a, b) => a.name.localeCompare(b.name));
         this.contactListChangedEvent.next(this.contacts.slice());
       },
@@ -40,44 +38,55 @@ export class ContactService {
 
   addContact(newContact: Contact): void {
     if (!newContact) return;
-    this.maxContactId++;
-    newContact.id = this.maxContactId.toString();
-    this.contacts.push(newContact);
-    this.storeContacts();
+
+    newContact.id = ''; // backend assigns id
+
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+
+    this.http.post<{ message: string, contact: Contact }>(this.backendUrl, newContact, { headers }).subscribe(
+      (response) => {
+        this.contacts.push(response.contact);
+        this.contactListChangedEvent.next(this.contacts.slice());
+      },
+      (error) => {
+        console.error('Error adding contact:', error);
+      }
+    );
   }
 
   updateContact(updatedContact: Contact): void {
-    const index = this.contacts.findIndex(c => c.id === updatedContact.id);
-    if (index !== -1) {
-      this.contacts[index] = updatedContact;
-      this.storeContacts();
-    }
+    if (!updatedContact) return;
+
+    const pos = this.contacts.findIndex(c => c.id === updatedContact.id);
+    if (pos < 0) return;
+
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+
+    this.http.put(this.backendUrl + '/' + updatedContact.id, updatedContact, { headers }).subscribe(
+      () => {
+        this.contacts[pos] = updatedContact;
+        this.contactListChangedEvent.next(this.contacts.slice());
+      },
+      (error) => {
+        console.error('Error updating contact:', error);
+      }
+    );
   }
 
   deleteContact(contact: Contact): void {
-    const index = this.contacts.indexOf(contact);
-    if (index >= 0) {
-      this.contacts.splice(index, 1);
-      this.storeContacts();
-    }
-  }
+    if (!contact) return;
 
-  private storeContacts(): void {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    this.contacts.sort((a, b) => a.name.localeCompare(b.name));
-    this.http.put(this.firebaseUrl, this.contacts, { headers }).subscribe(() => {
-      this.contactListChangedEvent.next(this.contacts.slice());
-    });
-  }
+    const pos = this.contacts.findIndex(c => c.id === contact.id);
+    if (pos < 0) return;
 
-  private getMaxId(): number {
-    let maxId = 0;
-    for (let contact of this.contacts) {
-      const currentId = parseInt(contact.id ?? '0');
-      if (!isNaN(currentId) && currentId > maxId) {
-        maxId = currentId;
+    this.http.delete(this.backendUrl + '/' + contact.id).subscribe(
+      () => {
+        this.contacts.splice(pos, 1);
+        this.contactListChangedEvent.next(this.contacts.slice());
+      },
+      (error) => {
+        console.error('Error deleting contact:', error);
       }
-    }
-    return maxId;
+    );
   }
 }

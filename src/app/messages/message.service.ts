@@ -8,19 +8,18 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 export class MessageService {
   messages: Message[] = [];
   messageChangedEvent = new EventEmitter<Message[]>();
-  private maxMessageId: number = 0;
 
-  private firebaseUrl = 'https://wdd430-9af8f-default-rtdb.firebaseio.com/messages.json';
+  // 🔁 Updated backend URL
+  private backendUrl = 'http://localhost:3000/messages';
 
   constructor(private http: HttpClient) {
     this.getMessages();
   }
 
   getMessages(): void {
-    this.http.get<Message[]>(this.firebaseUrl).subscribe(
-      (messages: Message[]) => {
-        this.messages = messages || [];
-        this.maxMessageId = this.getMaxId();
+    this.http.get<{ message: string, messages: Message[] }>(this.backendUrl).subscribe(
+      (responseData) => {
+        this.messages = responseData.messages || [];
         this.messageChangedEvent.emit(this.messages.slice());
       },
       (error: any) => {
@@ -29,34 +28,26 @@ export class MessageService {
     );
   }
 
-  getMessage(id: string): Message {
-    return this.messages.find((msg) => msg.id === id)!;
+  getMessage(id: string): Message | undefined {
+    return this.messages.find((msg) => msg.id === id);
   }
 
   addMessage(message: Message) {
     if (!message) return;
 
-    this.maxMessageId++;
-    message.id = this.maxMessageId.toString();
-    this.messages.push(message);
-    this.storeMessages();
-  }
-
-  private storeMessages(): void {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    this.http.put(this.firebaseUrl, this.messages, { headers }).subscribe(() => {
-      this.messageChangedEvent.emit(this.messages.slice());
-    });
-  }
 
-  private getMaxId(): number {
-    let maxId = 0;
-    for (let msg of this.messages) {
-      const currentId = parseInt(msg.id ?? '0');
-      if (!isNaN(currentId) && currentId > maxId) {
-        maxId = currentId;
+    // clear id so backend generates one
+    message.id = '';
+
+    this.http.post<{ message: string, messageObj: Message }>(this.backendUrl, message, { headers }).subscribe(
+      (responseData) => {
+        this.messages.push(responseData.messageObj);
+        this.messageChangedEvent.emit(this.messages.slice());
+      },
+      (error: any) => {
+        console.error('Error adding message:', error);
       }
-    }
-    return maxId;
+    );
   }
 }
